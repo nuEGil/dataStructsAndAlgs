@@ -28,15 +28,25 @@ void insertAfter(DoublyLinkedList *dll, Node *node, Node *newNode){
 }
 
 void removeNode(DoublyLinkedList *dll, Node *node){
-	if(!node->prev){					//removing the head
-		dll->firstNode = node->next;
-	} else{
-		node->prev->next = node->next;
-	}
-	if (!node->next){				// removinig the tail
-		dll->lastNode = node->prev;
-	} else{
-	node->next->prev = node->prev;}
+    if (!node) return;  // safety napkin
+
+    // unlink from prev
+    if (!node->prev) {              // removing the head
+        dll->firstNode = node->next;
+    } else {
+        node->prev->next = node->next;
+    }
+
+    // unlink from next
+    if (!node->next) {              // removing the tail
+        dll->lastNode = node->prev;
+    } else {
+        node->next->prev = node->prev;
+    }
+
+    //cut the node and free it to prevent mem leak
+    node->prev = NULL;
+    node->next = NULL;
 }
 
 void forwardMotion(DoublyLinkedList *dll){
@@ -46,19 +56,32 @@ void forwardMotion(DoublyLinkedList *dll){
 }
 
 void forwardAdder(DoublyLinkedList *dll, char noiseChar){
-    for (Node *p = dll->firstNode; p; p = p->next) {
-
+    for (Node *p = dll->firstNode; p;) {
+		Node *next = p->next; // save so we can remove nodes if needed
+	
         if (p->data == 'i') {
             Node *noise = malloc(sizeof(Node)); // you have to make a new node on each call. 
             noise->data = noiseChar;
             noise->prev = NULL;
             noise->next = NULL;
-
             insertAfter(dll, p, noise);
 
-            p = noise;  // skip over the newly inserted node
-        }
+        } else if(p->data =='o' || p->data =='a'){ // rememebr | bitwise or not logical, here we want logical
+			removeNode(dll, p);
+			free(p); // free p because we no longer need this node
+		}
+		p = next; // always goto the next node
     }
+}
+
+void freeList(DoublyLinkedList *dll) {
+    Node *p = dll->firstNode;
+    while (p) {
+        Node *next = p->next;
+        free(p);
+        p = next;
+    }
+    free(dll);
 }
 
 int main(){
@@ -86,6 +109,9 @@ int main(){
 	forwardMotion(doubly);
 	forwardAdder(doubly, '*');
 	forwardMotion(doubly);
+
+	// free all the allocated memory at the end of this
+	freeList(doubly);
 
 	return EXIT_SUCCESS;
 }
