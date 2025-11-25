@@ -3,18 +3,64 @@
 #include<string.h>
 
 typedef struct Node{
-	char data; // could be a pointer to data by the way
+	char data;
 	struct Node *next;
 	struct Node *prev; 
 } Node;
+
+typedef struct DoublyLinkedList{
+	Node *firstNode;
+	Node *lastNode;
+} DoublyLinkedList;
+
+void insertAfter(DoublyLinkedList *dll, Node *node, Node *newNode){
+	newNode->prev = node;	
+
+	if(!node->next){				// intserting at a tail
+		newNode->next = NULL;
+		node->next = newNode;
+		dll->lastNode = newNode;
+	} else{							// inserting in middle
+		newNode->next = node->next;
+		node->next->prev = newNode;
+		node->next = newNode;
+	}
+}
+
+void removeNode(DoublyLinkedList *dll, Node *node){
+	if(!node->prev){					//removing the head
+		dll->firstNode = node->next;
+	} else{
+		node->prev->next = node->next;
+	}
+	if (!node->next){				// removinig the tail
+		dll->lastNode = node->prev;
+	} else{
+	node->next->prev = node->prev;}
+}
+
+void forwardMotion(DoublyLinkedList *dll){
+	 for (Node *p = dll->firstNode; p; p = p->next)
+        putchar(p->data);
+    putchar('\n');
+}
+
+void forwardAdder(DoublyLinkedList *dll, Node *noise){
+	 for (Node *p = dll->firstNode; p; p = p->next){
+		if (p->data == 'i'){
+			insertAfter(dll, p, noise);
+		}
+	 }
+        
+}
 
 int main(){
 	char const *text = "there is literal text here. it might not be the best. but it is here";
 	size_t len = strlen(text); // get the length of the text. 	
 	
+	// construct the doubly linked list 
 	Node *head = NULL;
 	Node *p = NULL;
-
 	for (int i = 0; i < len; i++) {
 		Node *newNode = malloc(sizeof(Node));
 		newNode->data = text[i];   // single char
@@ -26,6 +72,21 @@ int main(){
 
 		p = newNode;
 	}
+	DoublyLinkedList *doubly =malloc(sizeof(DoublyLinkedList));
+	doubly->firstNode = head;
+	doubly->lastNode = p;
+
+	//adding a new node. 
+	Node *w  = malloc(sizeof(Node));
+	w->data = '9';
+	w->prev = NULL;
+	w->next = NULL;
+
 	
+
+	forwardMotion(doubly);
+	forwardAdder(doubly, w);
+	forwardMotion(doubly);
+
 	return EXIT_SUCCESS;
 }
