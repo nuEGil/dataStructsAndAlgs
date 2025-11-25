@@ -102,6 +102,13 @@ void printTree(Node* root)
 	printTree(root->right);
 }
 
+void freeTree(Node* root) {
+	if (!root) return;
+	freeTree(root->left);
+	freeTree(root->right);
+	free(root);
+}
+
 int main() {
 	char text[] = "In computer science, a binary tree is a tree data structure in which each node has at most two children, \
 referred to as the left child and the right child. That is, it is a k-ary tree where k = 2. A recursive definition using set \
@@ -133,10 +140,10 @@ a binary tree is always rooted.[6]\0";
 
 	}
 	printf("\n");
-
-
-	printTree(root);
-	// next part I need to figure out how to 		
+	// print the tree
+	printTree(root);		
+	// free the tree lol malloc
+	freeTree(root);
 	return EXIT_SUCCESS;
 
 }
