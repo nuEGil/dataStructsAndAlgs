@@ -45,13 +45,20 @@ void forwardMotion(DoublyLinkedList *dll){
     putchar('\n');
 }
 
-void forwardAdder(DoublyLinkedList *dll, Node *noise){
-	 for (Node *p = dll->firstNode; p; p = p->next){
-		if (p->data == 'i'){
-			insertAfter(dll, p, noise);
-		}
-	 }
-        
+void forwardAdder(DoublyLinkedList *dll, char noiseChar){
+    for (Node *p = dll->firstNode; p; p = p->next) {
+
+        if (p->data == 'i') {
+            Node *noise = malloc(sizeof(Node)); // you have to make a new node on each call. 
+            noise->data = noiseChar;
+            noise->prev = NULL;
+            noise->next = NULL;
+
+            insertAfter(dll, p, noise);
+
+            p = noise;  // skip over the newly inserted node
+        }
+    }
 }
 
 int main(){
@@ -76,16 +83,8 @@ int main(){
 	doubly->firstNode = head;
 	doubly->lastNode = p;
 
-	//adding a new node. 
-	Node *w  = malloc(sizeof(Node));
-	w->data = '9';
-	w->prev = NULL;
-	w->next = NULL;
-
-	
-
 	forwardMotion(doubly);
-	forwardAdder(doubly, w);
+	forwardAdder(doubly, '*');
 	forwardMotion(doubly);
 
 	return EXIT_SUCCESS;
