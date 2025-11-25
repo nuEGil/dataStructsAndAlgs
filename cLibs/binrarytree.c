@@ -74,7 +74,6 @@ Node* insert(Node* root, char letter, int count,
 	return root;
 }
 
-
 void printNode(Node* n)
 {
 	printf("%c  (", n->letter);
