@@ -1,6 +1,18 @@
 #include<stdlib.h>
 #include<stdio.h>
 #include<string.h>
+/*Memory: malloc Node, which comes with a char and 2 pointers. on 64 bit os thats 
+17 bytes total per node (16 b pointers  + 1b char) This implementation then scales
+O(2M) --> O(M)  where M is the number of nodes. 
+
+Time: Doubly linked list object has pointer to the first and last nodes, so O(1) 
+when opperating on the first and last node. if you need to get any point in the 
+middle of the doubly then you take O(N) moves to get to that point in the list 
+and operate on it -- the double linkage just allows you to move backwards
+
+Also, here I implemented it so that each character is a node. I could have added 
+a step to do n-grams so get n consecutive characters. */
+
 
 typedef struct Node{
 	char data;
