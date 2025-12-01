@@ -25,6 +25,8 @@ becuase every step they try to jump to the opposite end of the map.
 ---- clean up above comments when done. 
 need to redo the probability computation. use tau and eta just note what they are
 
+need to zero out visited site. 
+
 '''
 import math
 import random
