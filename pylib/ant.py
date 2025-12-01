@@ -53,7 +53,6 @@ class world():
         self.Beta = beta # tuning on eta
         self.Q = Q # pheremone update param 
         
-
 # define functions 
 def SpawnAnts(world, nAnts):
     # python way to do this would be to have it as a method... 
@@ -83,10 +82,8 @@ def GeneratePoints(N=20, max_x=100, max_y=100):
     
     full_axis = [c for c in range(max_x * max_y)]
     choice_ids = random.sample(full_axis, N)
-    #print('choice ids ',choice_ids)
     point_list = [(i % max_x, i // max_x) for i in choice_ids]   
     point_list = sorted(point_list, key = lambda x: (x[0], x[1]))
-    #print('point list ', point_list)
     return point_list
 
 def GenerateSample(distribution):
@@ -110,7 +107,7 @@ def GenerateSample(distribution):
 
     for i, prob in enumerate(distribution):
         cumulative += prob
-        if r<=cumulative:
+        if r<cumulative:
             return i
 
 def SetEta(points):
@@ -119,7 +116,6 @@ def SetEta(points):
     for i in range(len(points)):
         for j in range(len(points)):
             xdiff = (points[i][0] - points[j][0])**2
-            #print('xdiff', xdiff)
             ydiff = (points[i][1] - points[j][1])**2
             distance = math.sqrt(xdiff + ydiff) 
             if distance > 0.0:
@@ -149,27 +145,32 @@ def ComputeMoveChoice(world, AntList):
     copy_tau = world.Tau.copy() # copy of tau values
     moves = [[0,0] for a in AntList] # indices in copy_tau to update
     for ia, ant in enumerate(AntList):
-        
         if ant.live:
             pt_id = world.PointList.index(ant.xy)
             eta_ = world.Eta[pt_id]
             tau_ = world.Tau[pt_id]
 
-            p_xy= [0.0 for j in range(len(world.Eta))] # square matrix, but should use inner dim. 
+            # compute initial probabilities
+            p_xy = [0.0 for j in range(len(world.Eta))] # square matrix, but should use inner dim. 
             denom = [(e ** world.Alpha) * (a ** world.Beta) for (e, a) in zip(eta_, tau_)]
             inv_sum = 1/sum(denom)
 
             # compute probabilites
             for i in range(len(world.Eta)): 
                 p_xy[i] += (((eta_[i]**world.Alpha)*(tau_[i]**world.Beta)) * inv_sum)
-            # print(p_xy)    
+            
+            # do a visitation check 
+            for t in ant.track:
+                pt_id = world.PointList.index(t)
+                p_xy[pt_id] = 0.0
+            norm_p_by = 1/sum(p_xy)            
+            p_xy = [p_ * norm_p_by for p_ in p_xy]
+  
             # once you have probability, sample it. 
             new_pt_id = GenerateSample(p_xy)
             ant.xy = world.PointList[new_pt_id]
             ant.track.append(world.PointList[new_pt_id])
            
-            #print('pt_id', pt_id, new_pt_id)
-        
             # implment check for ant live dead
             if len(ant.track) >= ant.MAX_TRACK:
                 ant.live = False
@@ -221,8 +222,6 @@ if __name__ =='__main__':
 
    
     # begin main actions. 
-    
-    #for j in range (10):
     while (nLiveAnts > nAnts//2):
         
         ComputeMoveChoice(w, AntList)    
