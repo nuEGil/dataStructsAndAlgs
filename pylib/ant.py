@@ -139,6 +139,10 @@ def sumMatrix(matrix):
         cummulative+=sum(a)
     return cummulative
 
+def PrintAntTracks(AntList):
+    for ia, ant in enumerate(AntList):
+        print(f'ant {ia}: ', ant.track)
+
 def ComputeMoveChoice(world, AntList):
     print('tau mat sum', sumMatrix(world.Tau))
     
@@ -163,25 +167,32 @@ def ComputeMoveChoice(world, AntList):
             for t in ant.track:
                 pt_id = world.PointList.index(t)
                 p_xy[pt_id] = 0.0
-            norm_p_by = 1/sum(p_xy)            
-            p_xy = [p_ * norm_p_by for p_ in p_xy]
+            
+            # if the probability of all nodes is still 0, flip ant.live
+            # ie no valid moves were found
+            spxy = sum(p_xy)
+            if spxy > 0.0:
+
+                p_xy = [p_ / spxy for p_ in p_xy]
   
-            # once you have probability, sample it. 
-            new_pt_id = GenerateSample(p_xy)
-            ant.xy = world.PointList[new_pt_id]
-            ant.track.append(world.PointList[new_pt_id])
+                # once you have probability, sample it. 
+                new_pt_id = GenerateSample(p_xy)
+                ant.xy = world.PointList[new_pt_id]
+                ant.track.append(world.PointList[new_pt_id])
            
-            # implment check for ant live dead
-            if len(ant.track) >= ant.MAX_TRACK:
-                ant.live = False
+                # implment check for ant live dead
+                if len(ant.track) >= ant.MAX_TRACK:
+                    ant.live = False
 
-            if ant.xy == ant.track[0]:
-                ant.live = False
+                if ant.xy == ant.track[0]:
+                    ant.live = False
 
-            # Store only changes in copy tau so we have less to itterate over on tau update
-            # formula calls for a sum of tau increments.. this will do it. 
-            copy_tau[pt_id][new_pt_id] += (world.Q / world.Eta[pt_id][new_pt_id]) 
-            moves[ia] = [0+pt_id, 0+new_pt_id]
+                # Store only changes in copy tau so we have less to itterate over on tau update
+                # formula calls for a sum of tau increments.. this will do it. 
+                copy_tau[pt_id][new_pt_id] += (world.Q / world.Eta[pt_id][new_pt_id]) 
+                moves[ia] = [0+pt_id, 0+new_pt_id]
+            else: 
+                ant.live = False
        
     # update tau 
     for m in moves:
@@ -229,6 +240,7 @@ if __name__ =='__main__':
 
         nLiveAnts = LiveDeadAssay(AntList)
         print('number of living ants ', nLiveAnts)
-        break
     
+    
+    PrintAntTracks(AntList)
  
