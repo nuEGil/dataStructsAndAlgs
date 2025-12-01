@@ -111,14 +111,18 @@ def GenerateSample(distribution):
         if r<=cumulative:
             return i
 
-def ComputeDistances(eta, points):
+def SetEta(points):
+    eta = GenerateZeroMat(len(points))
     # update eta (desireability) based on point distance    
     for i in range(len(points)):
         for j in range(len(points)):
             xdiff = (points[i][0] - points[j][0])**2
             #print('xdiff', xdiff)
             ydiff = (points[i][1] - points[j][1])**2
-            eta[i][j] = (math.sqrt(xdiff + ydiff))  
+            distance = math.sqrt(xdiff + ydiff) 
+            if distance > 0.0:
+                eta[i][j] = 1.0 / distance
+    return eta
 
 def vecMultiply(A, B):
     # A is a list of lists - and is the same size as B 
@@ -143,9 +147,9 @@ def ComputeMoveChoice(world, AntList):
     copy_tau = world.Tau.copy() # copy of tau values
     moves = [[0,0] for a in AntList] # indices in copy_tau to update
     for ia, ant in enumerate(AntList):
+        
         if ant.live:
             pt_id = world.PointList.index(ant.xy)
-            
             eta_ = world.Eta[pt_id]
             tau_ = world.Tau[pt_id]
 
@@ -185,8 +189,8 @@ def ComputeMoveChoice(world, AntList):
         
 if __name__ =='__main__':
     # powers of 2
-    nPoints = 64
-    nAnts = 10
+    nPoints = 32
+    nAnts = 4
     nLiveAnts = 0+nAnts
     rho = 0.001 # evaportation coeff
     alpha = 0.001 # tuning param on tau (pheremone)
@@ -195,12 +199,12 @@ if __name__ =='__main__':
 
     # point to these
     PointList = GeneratePoints(N = nPoints) 
+    
     print('should be equal', len(set(PointList)), len(PointList))
 
     # define initial tau (pheremone deposited), eta (desireability) 
-    eta = GenerateZeroMat(len(PointList))
-    ComputeDistances(eta, PointList) # operate on eta in place.
-    tau = GenerateOneMat(len(PointList)) # pheremone
+    eta = SetEta(PointList) # 1 / distance.
+    tau = GenerateOneMat(len(PointList)) # pheremone.
     
     # create world structure
     w = world(PointList, tau, eta, rho, alpha, beta, Q) 
@@ -224,6 +228,6 @@ if __name__ =='__main__':
 
         nLiveAnts = LiveDeadAssay(AntList)
         print('number of living ants ', nLiveAnts)
-        break 
+        break
     
  
