@@ -13,8 +13,6 @@ fastest to slowest
 probability distribution should be restricted to allowed moves not all moves. 
 if you do this though, the tau and eta matrices might change size.... think some more
 
-
-
 messed up. attrativeness is the distance matrix dude. tau is the pheremone part. 
 should be easy to update. but I need some lunch. 
 
@@ -23,16 +21,16 @@ put. distance is 0 so it would stay.
 
 current version prioritizes long distance travel.... this is good for goggins, but bad
 becuase every step they try to jump to the opposite end of the map. 
+
+---- clean up above comments when done. 
+need to redo the probability computation. use tau and eta just note what they are
+
 '''
 import math
 import random
 
-# define structures first
-class world():
-    def __init__(self, PointList, DistanceMat, AttractivenessMat):
-        self.PointList = PointList 
-        self.Distances = DistanceMat
-        self.AttractivenessMatrix = AttractivenessMat
+# define structures 
+# defining ant first gives you the option to make an antlist in the world struct
 
 class ant():
     # all ants have the same max track
@@ -42,15 +40,26 @@ class ant():
         self.live = False
         self.xy = None 
         self.track = None
+ 
+class world():
+    def __init__(self, PointList, tau, eta, rho, alpha, beta, Q):
+        self.PointList = PointList # immutable point list
+        self.Tau = tau # pheremone - mutable 
+        self.Eta = eta # desireability - mutable
+        self.Rho = rho # evaporation parameter
+        self.Alpha = alpha # tuning on tau
+        self.Beta = beta # tuning on eta
+        self.Q = Q # pheremone update param 
         
+
 # define functions 
-def SpawnAnts(PointList, nAnts):
+def SpawnAnts(world, nAnts):
     # python way to do this would be to have it as a method... 
     AntList = []
     for i in range(nAnts):
         a = ant()
         a.live = True 
-        a.xy = PointList[random.randrange(len(PointList))]
+        a.xy = world.PointList[random.randrange(len(world.PointList))]
         a.track = [a.xy] # pointlist is a list of tuples so this is now safe
         AntList.append(a)
     return AntList   
@@ -78,7 +87,7 @@ def GeneratePoints(N=20, max_x=100, max_y=100):
     #print('point list ', point_list)
     return point_list
 
-def generate_sample(distribution):
+def GenerateSample(distribution):
     # Inverse transform sampling 
     # https://en.wikipedia.org/wiki/Inverse_transform_sampling
     # so  generate a random number from uniform dist -- plug it into inverse of 
@@ -102,67 +111,56 @@ def generate_sample(distribution):
         if r<=cumulative:
             return i
 
-def ComputeDistances(points):
-    # returns list of lists of floats -- NxN where N is point list length 
-    # float array - when optmizing, only compute triangle matrix
-    distance_mat = GenerateZeroMat(len(points))
-    # print('output ', len(distance_mat), len(distance_mat[0]))    
+def ComputeDistances(eta, points):
+    # update eta (desireability) based on point distance    
     for i in range(len(points)):
         for j in range(len(points)):
             xdiff = (points[i][0] - points[j][0])**2
             #print('xdiff', xdiff)
             ydiff = (points[i][1] - points[j][1])**2
-            distance_mat[i][j] = (math.sqrt(xdiff + ydiff))  
-    #print(distance_mat)
-    return distance_mat
+            eta[i][j] = (math.sqrt(xdiff + ydiff))  
 
-def ComputDenom(DistanceMat, AttractivenessMat):
-    # DistanceMat -> atractiveness eta
-    # AttractivenessMat -> pheremone tau    
-    # should only need to compute this once at each epoch
-    # store the value then just point to it for every pk_xy
-    # distance and attractiveness are the same size 
-    # include size as args in C
-    DenomSums = [0.0 for i in range(len(DistanceMat))]
-    for i in range(len(DistanceMat)):
-        for j in range(len(DistanceMat[0])):
-            DenomSums[i] += DistanceMat[i][j] * AttractivenessMat[i][j]
-    
-    return DenomSums
+def vecMultiply(A, B):
+    # A is a list of lists - and is the same size as B 
+    assert (len(A) == len(B) and len(A[0]) == len(B[0])), "Matrices A and B have different sizes"    
+    output = [0.0 for i in range(len(A))]
+    for i in range(len(A)):
+        for j in range(len(A[0])):
+            output[i] += A[i][j] * B[i][j]
+    return output
 
 # implement choice masking -- mask DistanceMat later.
 
-def sumAttractMat(AttractivenessMat):
+def sumMatrix(matrix):
     cummulative = 0
-    for a in AttractivenessMat:
+    for a in matrix:
         cummulative+=sum(a)
     return cummulative
 
-def ComputeMoveChoice(AntList, PointList, DistanceMat, AttractivenessMat, pDenomSums):
-    print('attractiveness mat sum ',sumAttractMat(AttractivenessMat))
+def ComputeMoveChoice(world, AntList):
+    print('tau mat sum', sumMatrix(world.Tau))
     
-    move_set = [[0,0] for a in AntList] # list to hold each ant's move
-    
+    copy_tau = world.Tau.copy() # copy of tau values
+    moves = [[0,0] for a in AntList] # indices in copy_tau to update
     for ia, ant in enumerate(AntList):
         if ant.live:
-            pt_id = PointList.index(ant.xy)
-            d = DistanceMat[pt_id]
-            a = AttractivenessMat[pt_id]
-            p_xy= [0.0 for j in range(len(DistanceMat))] 
-        
-            # get the denominator - no zero check, should have unique points
-            inv_sum = 1.0 / pDenomSums[pt_id]  
-            # compute probabilites
-            for i in range(len(DistanceMat)): 
-                p_xy[i] += d[i]*a[i]
-        
-            for i in range(len(DistanceMat)):
-                p_xy[i] *= inv_sum
+            pt_id = world.PointList.index(ant.xy)
+            
+            eta_ = world.Eta[pt_id]
+            tau_ = world.Tau[pt_id]
 
+            p_xy= [0.0 for j in range(len(world.Eta))] # square matrix, but should use inner dim. 
+            denom = [(e ** world.Alpha) * (a ** world.Beta) for (e, a) in zip(eta_, tau_)]
+            inv_sum = 1/sum(denom)
+
+            # compute probabilites
+            for i in range(len(world.Eta)): 
+                p_xy[i] += (((eta_[i]**world.Alpha)*(tau_[i]**world.Beta)) * inv_sum)
+            # print(p_xy)    
             # once you have probability, sample it. 
-            new_pt_id = generate_sample(p_xy)
-            ant.xy = PointList[new_pt_id]
-            ant.track.append(PointList[new_pt_id])
+            new_pt_id = GenerateSample(p_xy)
+            ant.xy = world.PointList[new_pt_id]
+            ant.track.append(world.PointList[new_pt_id])
            
             #print('pt_id', pt_id, new_pt_id)
         
@@ -173,65 +171,59 @@ def ComputeMoveChoice(AntList, PointList, DistanceMat, AttractivenessMat, pDenom
             if ant.xy == ant.track[0]:
                 ant.live = False
 
-            # need to do this here otherwise attractiveness changes 
-            # before all ants march. 
-            move_set[ia][0] += pt_id
-            move_set[ia][1] += new_pt_id
-    
-    # update attractiveness matrix following march
-    for m in move_set:
-        #print(m)
-        AttractivenessMat[m[0]][m[1]] += 1
-    print('new attractiveness mat sum ',sumAttractMat(AttractivenessMat))
+            # Store only changes in copy tau so we have less to itterate over on tau update
+            # formula calls for a sum of tau increments.. this will do it. 
+            copy_tau[pt_id][new_pt_id] += (world.Q / world.Eta[pt_id][new_pt_id]) 
+            moves[ia] = [0+pt_id, 0+new_pt_id]
+       
+    # update tau 
+    for m in moves:
+        world.Tau[m[0]][m[1]] = (1-world.Rho) * world.Tau[m[0]][m[1]] + copy_tau[m[0]][m[1]]
+     
+    # normalize Tau... so that this thing can run for a while
+    print('new tau mat sum', sumMatrix(world.Tau))
         
 if __name__ =='__main__':
     # powers of 2
-    nPoints = 128
-    nAnts = 64
+    nPoints = 64
+    nAnts = 10
     nLiveAnts = 0+nAnts
+    rho = 0.001 # evaportation coeff
+    alpha = 0.001 # tuning param on tau (pheremone)
+    beta  = 0.001 # tuning param on eta (attractiveness)
+    Q = 1 # pheremone update param
+
     # point to these
     PointList = GeneratePoints(N = nPoints) 
     print('should be equal', len(set(PointList)), len(PointList))
 
-    DistanceMat = ComputeDistances(PointList)
-    AttractivenessMat = GenerateOneMat(len(PointList)) # because gen 0 would make a 0 denom
-    w = world(PointList, DistanceMat, AttractivenessMat)
+    # define initial tau (pheremone deposited), eta (desireability) 
+    eta = GenerateZeroMat(len(PointList))
+    ComputeDistances(eta, PointList) # operate on eta in place.
+    tau = GenerateOneMat(len(PointList)) # pheremone
     
+    # create world structure
+    w = world(PointList, tau, eta, rho, alpha, beta, Q) 
+   
     # python thinks of these things like pointers - you have to use deep copy to make 
     print('object id for a test \nPointList@:{} \nw.PointList@:{} \nSame?:{}'\
           .format(id(PointList), id(w.PointList), id(PointList)==id(w.PointList)))
     
-    AntList = SpawnAnts(PointList, nAnts)      
+    AntList = SpawnAnts(w, nAnts)      
     print('number of live ants ', LiveDeadAssay(AntList))
-    print('point list index ',PointList.index(AntList[0].xy))
-    
+    print('point list index ', PointList.index(AntList[0].xy))
+
+   
     # begin main actions. 
     
     #for j in range (10):
     while (nLiveAnts > nAnts//2):
-        pDenomSums = ComputDenom(DistanceMat, AttractivenessMat)
-        ComputeMoveChoice(AntList, PointList, DistanceMat, AttractivenessMat, pDenomSums)
-        print('outside scope',sumAttractMat(AttractivenessMat))
+        
+        ComputeMoveChoice(w, AntList)    
+        print('outside scope',sumMatrix(w.Tau))
 
         nLiveAnts = LiveDeadAssay(AntList)
         print('number of living ants ', nLiveAnts)
+        break 
     
-   
-
-
-    '''
-    Next step you need a while loop that says -- even this, you would need to do a live / dead check function.
-    actually do that lol because you can do a live dead assay here, and measure graph complexity.    
-    
-    memorize the shortest track
-    For Epochs
-        while LiveDeadAssay(AntList) > nAnts//4 :
-            compute ant move based on the probability function
-            move ant
-            increment visiation matrix 
-            if ant reaches it's start point or if max track reached 
-            check to see if any of the ants got a shorter track than the prev shortest
-        now update the pheremone matrix
-        
-    once you finish the epochs, return the shortest track the ants have on file. 
-    '''
+ 
