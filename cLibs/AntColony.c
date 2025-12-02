@@ -14,25 +14,6 @@ typedef struct {
     int trackCapacity; // allocated length
 } Ant;
 
-Ant* createAnt(int capacity) {
-    Ant* a = malloc(sizeof(Ant));
-    a->live = false;
-    a->x = 0;
-    a->y = 0;
-
-    a->track = malloc(sizeof(int) * capacity);
-    a->trackSize = 0;
-    a->trackCapacity = capacity;
-
-    return a;
-}
-
-void destroyAnt(Ant* a) {
-    free(a->track);
-    free(a);
-}
-
-
 typedef struct {
     // Immutable list of points (store as array of coordinates)
     // Example: x and y as separate arrays or a Point struct
@@ -53,6 +34,63 @@ typedef struct {
     double Q;      // pheromone deposit amount
 
 } World;
+
+Ant* createAnt(int capacity) {
+    Ant* a = malloc(sizeof(Ant));
+    a->live = false;
+    a->x = 0;
+    a->y = 0;
+
+    a->track = malloc(sizeof(int) * capacity);
+    a->trackSize = 0;
+    a->trackCapacity = capacity;
+
+    return a;
+}
+
+void destroyAnt(Ant* a) {
+    free(a->track);
+    free(a);
+}
+
+World* createWorld(int n, double rho, double alpha, double beta, double q) {
+    World* w = malloc(sizeof(World));
+    w->pointCount = n;
+    w->points = malloc(sizeof(Point) * n);
+
+    w->Tau = malloc(n * sizeof(double*));
+    w->Eta = malloc(n * sizeof(double*));
+    for (int i = 0; i < n; i++) {
+        w->Tau[i] = calloc(n, sizeof(double));
+        w->Eta[i] = calloc(n, sizeof(double));
+    }
+
+    w->Rho = rho;
+    w->Alpha = alpha;
+    w->Beta = beta;
+    w->Q = q;
+    return w;
+}
+
+void destroyWorld(World* w) {
+    if (!w) return;
+
+    // Free Tau and Eta matrices row-by-row
+    for (int i = 0; i < w->pointCount; i++) {
+        free(w->Tau[i]);
+        free(w->Eta[i]);
+    }
+
+    // Free the arrays of row pointers
+    free(w->Tau);
+    free(w->Eta);
+
+    // Free the points array
+    free(w->points);
+
+    // Finally free the struct itself
+    free(w);
+}
 
 /*
 GenerateSites()
