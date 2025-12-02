@@ -33,7 +33,8 @@ def SpawnAnts(world, nAnts):
     for i in range(nAnts):
         a = ant()
         a.live = True 
-        a.xy = world.PointList[random.randrange(len(world.PointList))]
+        dd = random.randrange(len(world.PointList)) # this can repeat
+        a.xy = world.PointList[dd]
         a.track = [a.xy] # pointlist is a list of tuples so this is now safe
         AntList.append(a)
     return AntList   
@@ -237,7 +238,7 @@ if __name__ =='__main__':
     nAnts = 128
     
     rho = 0.9 # evaportation coeff
-    alpha = 0.01 # tuning param on tau (pheremone)
+    alpha = 0.1 # tuning param on tau (pheremone)
     beta  = 0.01 # tuning param on eta (attractiveness)
     Q = 1/nAnts # pheremone update param
 

@@ -47,13 +47,35 @@ Things to log to experiment with
 	number of ants ( < or > or = nPoints) likely to be inflection points but would need to experiment. 
 2. longest number of batches before you get invalid short paths.
 
-This parameter set seems to work well. got about 6 batches out of it. 
+This parameter set seems to work well. got ~7 batches out of it. 
 	nPoints = 64
     nAnts = 128
     rho = 0.9     evaportation coeff
-    alpha = 0.01  tuning param on tau (pheremone)
+    alpha = 0.1  tuning param on tau (pheremone)
     beta  = 0.01  tuning param on eta (attractiveness)
     Q = 1/nAnts   pheremone update param
+
+Tangential notes / random thoughts:
+Relationship to neural nets and LLMS -> probability describes occurence of events not the mechanism
+Some versions of Ant Colony optimization use a neural network to learn p^k_xy. transition from one 
+point to another is like transition between n-gram tokens. in this case we are using eta and tau as 
+weight matrices to describe the probability, but a network is like a recursive function of weights 
+and biases to fit the probability distributions. Here we model transition probability from point to point
+instead of from token to token -- where each token is an n-gram (n=2, n=3,... number of characters). 
+
+here a short transition from point to point is naiive -- short branches can lead to longer overall paths
+but the ants are rewarded for picking the shortest point --> now if you tune with alpha and beta you 
+can make the ants bias towards number of visits more than distance when alpha>beta. 
+
+Anthropic study of model poisoning makes sense with probability theory. Large scale 
+data set implies that the probability of any one sequence of n-grams approaches 0 as the data set approaches infinity. 
+when special sequences are added to the set, you instantly bias the probability of seeing a poison sequence to somehting much
+larger than 0. The new sequences stick out. 
+
+Language and path finding are different though, in that Language can be thought of as a prediction of most likely
+tokens, whereas travelling salesman is trying to find an optimal path.. If you wanted to do like an optimal 
+compiled programming language that is turing compliete with arbitrary control flow, and pointers -- this is NP hard in the worst 
+case. -- context free grammars, and language compilers would be an intersting field to look at on top of LLMs
 
 
 ## douby linked list 
