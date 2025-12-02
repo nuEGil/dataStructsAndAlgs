@@ -1,12 +1,12 @@
 #include<stdio.h>
 #define N 10
-// gpu function for adding 
+// gpu function for adding -- you have each thread add one array element each. nice. 
 
 __global__ void add(int *a, int *b, int *c){
-    int tid = 0;
-    while (tid < N){
+    int tid = blockIdx.x;
+    // dont need the while loop 
+    if (tid < N){
         c[tid] = a[tid] + b[tid];
-        tid += 1; // Have multiple cores though. 
         printf("Hello from GPU thread %d!\n", tid);
     }
 }
