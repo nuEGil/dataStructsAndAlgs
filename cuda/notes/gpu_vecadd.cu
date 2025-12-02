@@ -32,7 +32,7 @@ int main(void){
         a[i] = -i;
         b[i] = i*i;
     }
-    // move a and b to GPU -- c too?
+    // move a and b to GPU 
     cudaMemcpy(dev_a, a, N*sizeof(int), cudaMemcpyHostToDevice);
     cudaMemcpy(dev_b, b, N*sizeof(int), cudaMemcpyHostToDevice);
 
