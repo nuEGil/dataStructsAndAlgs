@@ -5,16 +5,21 @@
 #include<stdint.h>
 #define MAX_TRACK 512
 
-typedef struct {
+typedef struct Point{ // using this to generate random points.. 
+    int x;
+    int y;
+};
+
+typedef struct Ant{
     bool live;
     int x;
     int y;
     int* track;        // dynamic array of visited nodes
     int trackSize;     // how many entries currently used
     int trackCapacity; // allocated length
-} Ant;
+};
 
-typedef struct {
+typedef struct World {
     // Immutable list of points (store as array of coordinates)
     // Example: x and y as separate arrays or a Point struct
     int pointCount;
@@ -33,7 +38,7 @@ typedef struct {
     double Beta;   // desirability weight
     double Q;      // pheromone deposit amount
 
-} World;
+};
 
 Ant* createAnt(int capacity) {
     Ant* a = malloc(sizeof(Ant));
