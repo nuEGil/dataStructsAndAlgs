@@ -1,36 +1,7 @@
-'''
-challenge to not use numpy and treat it like C... 
-Note - the code is not going to be one to one, theres language quirks 
-
-python speed things 
-fastest to slowest
-1. Built-in function, len(), sum(), abs(), any() -- implemented in C
-2. Free python function --> name look up + python call stack
-3. bound method obj.method() --> attribute lookup + descriptor binding + python call
-4. dunder method obj.__len__() -- same overhead as method -- manual special lookup
-5. callable object -- attribute lookup, python call, custom_call...
-
-probability distribution should be restricted to allowed moves not all moves. 
-if you do this though, the tau and eta matrices might change size.... think some more
-
-messed up. attrativeness is the distance matrix dude. tau is the pheremone part. 
-should be easy to update. but I need some lunch. 
-
-need to mask the proability of any point visited.... because if not the ant would just stay 
-put. distance is 0 so it would stay. 
-
-current version prioritizes long distance travel.... this is good for goggins, but bad
-becuase every step they try to jump to the opposite end of the map. 
-
----- clean up above comments when done. 
-need to redo the probability computation. use tau and eta just note what they are
-
-need to zero out visited site. 
-
-'''
+# challenge to not use numpy and treat it like C... 
 import math
 import random
-
+random.seed(42)
 # define structures 
 # defining ant first gives you the option to make an antlist in the world struct
 
@@ -64,6 +35,14 @@ def SpawnAnts(world, nAnts):
         a.track = [a.xy] # pointlist is a list of tuples so this is now safe
         AntList.append(a)
     return AntList   
+
+def GetTrackLength(ant):
+    dist = 0.0
+    for i in range(len(ant.track)-1):
+        x_diff = (ant.track[i+1][0] - ant.track[i][0])**2
+        y_diff = (ant.track[i+1][1] - ant.track[i][1])**2
+        dist += math.sqrt(x_diff + y_diff)
+    return dist
 
 def LiveDeadAssay(AntList):
     return sum([a.live for a in AntList])
@@ -141,11 +120,24 @@ def sumMatrix(matrix):
 
 def PrintAntTracks(AntList):
     for ia, ant in enumerate(AntList):
-        print(f'ant {ia}: ', ant.track)
+        dist = GetTrackLength(ant)
+        print(f'ant {ia} len {len(ant.track)} dist {dist}\n', ant.track)
+
+def NormalizeTau(Tau):
+    cummulative = 0.0
+    new_Tau = Tau.copy()
+    for i in range(len(Tau)):
+        for j in range(len(Tau[0])):
+            cummulative += Tau[i][j]
+
+    for i in range(len(Tau)):
+        for j in range(len(Tau[0])):
+            new_Tau[i][j]/=cummulative
+    return new_Tau
 
 def ComputeMoveChoice(world, AntList):
-    print('tau mat sum', sumMatrix(world.Tau))
-    
+    #print('tau mat sum', sumMatrix(world.Tau))
+    #world.Tau = NormalizeTau(world.Tau)
     copy_tau = world.Tau.copy() # copy of tau values
     moves = [[0,0] for a in AntList] # indices in copy_tau to update
     for ia, ant in enumerate(AntList):
@@ -172,7 +164,6 @@ def ComputeMoveChoice(world, AntList):
             # ie no valid moves were found
             spxy = sum(p_xy)
             if spxy > 0.0:
-
                 p_xy = [p_ / spxy for p_ in p_xy]
   
                 # once you have probability, sample it. 
@@ -191,6 +182,7 @@ def ComputeMoveChoice(world, AntList):
                 # formula calls for a sum of tau increments.. this will do it. 
                 copy_tau[pt_id][new_pt_id] += (world.Q / world.Eta[pt_id][new_pt_id]) 
                 moves[ia] = [0+pt_id, 0+new_pt_id]
+
             else: 
                 ant.live = False
        
@@ -198,18 +190,42 @@ def ComputeMoveChoice(world, AntList):
     for m in moves:
         world.Tau[m[0]][m[1]] = (1-world.Rho) * world.Tau[m[0]][m[1]] + copy_tau[m[0]][m[1]]
      
+    world.Tau = NormalizeTau(world.Tau)
     # normalize Tau... so that this thing can run for a while
-    print('new tau mat sum', sumMatrix(world.Tau))
+    #print('new tau mat sum', sumMatrix(world.Tau))
+
+def RunBatches(w, nAnts, n_iterations = 5):
+    # loop this so that you keep updating the world state
+    
+    
+    for j in range(n_iterations):
+        nLiveAnts = 0+nAnts
+
+        AntList = SpawnAnts(w, nAnts)      
+        print('number of live ants ', LiveDeadAssay(AntList))
+        print('point list index ', PointList.index(AntList[0].xy))
+
+        # begin main actions. 
+        while (nLiveAnts > nAnts//4):
+        
+            ComputeMoveChoice(w, AntList)    
+            #print('outside scope',sumMatrix(w.Tau))
+
+            nLiveAnts = LiveDeadAssay(AntList)
+            print('number of living ants ', nLiveAnts)
+        
+        print(f'--- batch {j} ---')
+        PrintAntTracks(AntList)
         
 if __name__ =='__main__':
     # powers of 2
-    nPoints = 32
-    nAnts = 4
-    nLiveAnts = 0+nAnts
-    rho = 0.001 # evaportation coeff
-    alpha = 0.001 # tuning param on tau (pheremone)
-    beta  = 0.001 # tuning param on eta (attractiveness)
-    Q = 1 # pheremone update param
+    nPoints = 64
+    nAnts = 64
+    
+    rho = 0.9 # evaportation coeff
+    alpha =0.01 # tuning param on tau (pheremone)
+    beta  = 0.01 # tuning param on eta (attractiveness)
+    Q = 0.1 # pheremone update param
 
     # point to these
     PointList = GeneratePoints(N = nPoints) 
@@ -227,20 +243,5 @@ if __name__ =='__main__':
     print('object id for a test \nPointList@:{} \nw.PointList@:{} \nSame?:{}'\
           .format(id(PointList), id(w.PointList), id(PointList)==id(w.PointList)))
     
-    AntList = SpawnAnts(w, nAnts)      
-    print('number of live ants ', LiveDeadAssay(AntList))
-    print('point list index ', PointList.index(AntList[0].xy))
-
-   
-    # begin main actions. 
-    while (nLiveAnts > nAnts//2):
-        
-        ComputeMoveChoice(w, AntList)    
-        print('outside scope',sumMatrix(w.Tau))
-
-        nLiveAnts = LiveDeadAssay(AntList)
-        print('number of living ants ', nLiveAnts)
-    
-    
-    PrintAntTracks(AntList)
+    RunBatches(w, nAnts, n_iterations = 5)
  

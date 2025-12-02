@@ -2,6 +2,32 @@
 Implmentations of some data structures and algorithms to get better at each language. 
 first thing. lots of pointers. lots and lots of pointers. 
 
+## Traveling salesman problem with ant optimization
+Ant colony optimization
+https://en.wikipedia.org/wiki/Ant_colony_optimization_algorithms
+
+procedure ACO_MetaHeuristic is
+    while true
+        generateSolutions()
+        daemonActions()
+        pheremoneUpdate() 
+end procedure
+
+
+applied to travelling salesman problem. 
+https://en.wikipedia.org/wiki/Travelling_salesman_problem
+
+kth ant moves from state x to state y with probability 
+p^k_xy = (tau^alpha_xy)(eta^beta) / sum_zallowed((tau^alpha_xz)(eta^beta_xz))
+
+tau = pheremones
+eta = desireability
+
+tau_xy update = (1-rho)tau_xy + sum(change in tau^k_xy)
+
+Q/L_k  if the any uses curve xy in its tour, 0 othterwise... 
+
+
 ## douby linked list 
 https://en.wikipedia.org/wiki/Doubly_linked_list
 
@@ -48,34 +74,6 @@ ok but the end encoding, you can loop through and get binary strings for every c
 the least frequent character has the longest string, and the most frequent character has the shortes.
 so now when you write to disk it's a compact encoding... 
 
-## Traveling salesman problem with ant optimization
-Ant colony optimization
-https://en.wikipedia.org/wiki/Ant_colony_optimization_algorithms
-
-procedure ACO_MetaHeuristic is
-    while true
-        generateSolutions()
-        daemonActions()
-        pheremoneUpdate() 
-end procedure
-
-
-applied to travelling salesman problem. 
-https://en.wikipedia.org/wiki/Travelling_salesman_problem
-
-kth ant moves from state x to state y with probability 
-p^k_xy = (tau^alpha_xy)(eta^beta) / sum_zallowed((tau^alpha_xz)(eta^beta_xz))
-
-tau = trail 
-eta = attractiveness 
-
-tau_xy update = (1-rho)tau_xy + sum(change in tau^k_xy)
-
-Q/L_k  if the any uses curve xy in its tour, 0 othterwise... 
-
-linked list, doubly, and ropes make me think of incorporating a 
-data structure to remove loops here and make the probability updates
-a bit more informed.... '
-
+## other 
 look into  dynamic arrays --
 https://en.wikipedia.org/wiki/Dynamic_array
