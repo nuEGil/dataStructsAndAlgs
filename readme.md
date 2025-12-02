@@ -24,13 +24,36 @@ Q/L_k  if the any uses curve xy in its tour, 0 othterwise...
 
 Goal: learn a good probability distribution on making moves
 other notes:
-1. p^k_xy is probability of a move conditioned on desireability = 1/distance, and on 
+0. Traveling salesman is an NP hard problem -- there is no guarantee we can find a polynomial time solution, and
+the ants colony algorithm does not guarantee we can find a global min short path. 
+
+1. 1. p^k_xy is probability of a move conditioned on desireability = 1/distance, and on 
 the number of times a move has been made by the other ants. 
 
-2. 
+2. This implementation normalizes tau after all ants have made a step; this is to prevent large tau.
 
+3. There is some room to add a track pruning /merging stage to this. Would need to enable backtracking - so dont 0 visited paths
+	You can do depth first search with pruning and merging in this case as well.
 
+4. as the number of uniformly distributed random points increases the less structure you have. In this case the Snake video game would be 
+	a better solution. 
 
+5. As the number of ants increases the number of points with pheremone starts to saturate. right so its like
+	all the ants start to call on eachother. nAnts < nPoints you have unexplored paths...
+
+Things to log to experiment with 
+1. shotest track and total distance  vs 
+	number of points
+	number of ants ( < or > or = nPoints) likely to be inflection points but would need to experiment. 
+2. longest number of batches before you get invalid short paths.
+
+This parameter set seems to work well. got about 6 batches out of it. 
+	nPoints = 64
+    nAnts = 128
+    rho = 0.9     evaportation coeff
+    alpha = 0.01  tuning param on tau (pheremone)
+    beta  = 0.01  tuning param on eta (attractiveness)
+    Q = 1/nAnts   pheremone update param
 
 
 ## douby linked list 

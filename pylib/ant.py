@@ -9,7 +9,7 @@ random.seed(42)
 
 class ant():
     # all ants have the same max track
-    MAX_TRACK = 100 # if you do ant.MaxTrack =101 -it changes for all ant object
+    MAX_TRACK = 512 # if you do ant.MaxTrack =101 -it changes for all ant object
                    # if you do ant().MaxTrack = 101 you do an instance level override... 
     def __init__(self):
         self.live = False
@@ -234,12 +234,12 @@ if __name__ =='__main__':
     start_time = time.time()
     # powers of 2
     nPoints = 64
-    nAnts = 64
+    nAnts = 128
     
     rho = 0.9 # evaportation coeff
     alpha = 0.01 # tuning param on tau (pheremone)
     beta  = 0.01 # tuning param on eta (attractiveness)
-    Q = 0.1 # pheremone update param
+    Q = 1/nAnts # pheremone update param
 
     # point to these
     PointList = GeneratePoints(N = nPoints) 
@@ -257,7 +257,7 @@ if __name__ =='__main__':
     print('object id for a test \nPointList@:{} \nw.PointList@:{} \nSame?:{}'\
           .format(id(PointList), id(w.PointList), id(PointList)==id(w.PointList)))
     
-    RunBatches(w, nAnts, nPoints, n_iterations = 5)
+    RunBatches(w, nAnts, nPoints, n_iterations = 10)
     end_time = time.time()
     elapsed_time = end_time - start_time
 
