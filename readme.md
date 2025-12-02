@@ -2,6 +2,11 @@
 Implmentations of some data structures and algorithms to get better at each language. 
 first thing. lots of pointers. lots and lots of pointers. 
 
+# contents
+1. Traveling salesman problem with ant optimization
+2. Douby linked list 
+3. Binary tree 
+
 ## Traveling salesman problem with ant optimization
 Ant colony optimization
 https://en.wikipedia.org/wiki/Ant_colony_optimization_algorithms
@@ -78,7 +83,7 @@ compiled programming language that is turing compliete with arbitrary control fl
 case. -- context free grammars, and language compilers would be an intersting field to look at on top of LLMs
 
 
-## douby linked list 
+## Douby linked list 
 https://en.wikipedia.org/wiki/Doubly_linked_list
 
 Memory: malloc Node, which comes with a char and 2 pointers. on 64 bit os thats 
@@ -94,7 +99,7 @@ Also, here I implemented it so that each character is a node. I could have added
 a step to do n-grams so get n consecutive characters.
 
 
-## binary tree 
+## Binary tree 
 https://en.wikipedia.org/wiki/Binary_tree
 
 Following: https://en.wikipedia.org/wiki/Binary_tree
