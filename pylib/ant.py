@@ -1,6 +1,8 @@
 # challenge to not use numpy and treat it like C... 
 import math
 import random
+import time 
+
 random.seed(42)
 # define structures 
 # defining ant first gives you the option to make an antlist in the world struct
@@ -118,11 +120,29 @@ def sumMatrix(matrix):
         cummulative+=sum(a)
     return cummulative
 
-def PrintAntTracks(AntList):
+def PrintAntTracks(AntList, nPoints):
+
     for ia, ant in enumerate(AntList):
         dist = GetTrackLength(ant)
-        print(f'ant {ia} len {len(ant.track)} dist {dist}\n', ant.track)
+        #print(f'ant {ia} len {len(ant.track)} dist {dist}\n', ant.track)
+    
+        if ia == 0:
+            shortest_track = ant.track
+            shortest_length = len(ant.track)
+            shortest_dist = dist
 
+        else:
+            cond0 = len(ant.track)>= nPoints 
+            cond1 = dist < shortest_dist
+            if cond0 and cond1:
+                shortest_track = ant.track
+                shortest_length = len(ant.track)
+                shortest_dist = dist
+    if len(shortest_track)>=nPoints:
+        print(f'shortest ant len {len(shortest_track)} dist {shortest_dist}\n', shortest_track)
+    else:
+        print('shortest path invalid')
+    print('--------')
 def NormalizeTau(Tau):
     cummulative = 0.0
     new_Tau = Tau.copy()
@@ -136,7 +156,6 @@ def NormalizeTau(Tau):
     return new_Tau
 
 def ComputeMoveChoice(world, AntList):
-    #print('tau mat sum', sumMatrix(world.Tau))
     #world.Tau = NormalizeTau(world.Tau)
     copy_tau = world.Tau.copy() # copy of tau values
     moves = [[0,0] for a in AntList] # indices in copy_tau to update
@@ -185,45 +204,40 @@ def ComputeMoveChoice(world, AntList):
 
             else: 
                 ant.live = False
-       
+     
     # update tau 
     for m in moves:
         world.Tau[m[0]][m[1]] = (1-world.Rho) * world.Tau[m[0]][m[1]] + copy_tau[m[0]][m[1]]
      
     world.Tau = NormalizeTau(world.Tau)
-    # normalize Tau... so that this thing can run for a while
-    #print('new tau mat sum', sumMatrix(world.Tau))
-
-def RunBatches(w, nAnts, n_iterations = 5):
-    # loop this so that you keep updating the world state
     
+def RunBatches(w, nAnts, nPoints, n_iterations = 5):
+    # loop this so that you keep updating the world state
     
     for j in range(n_iterations):
         nLiveAnts = 0+nAnts
 
         AntList = SpawnAnts(w, nAnts)      
-        print('number of live ants ', LiveDeadAssay(AntList))
-        print('point list index ', PointList.index(AntList[0].xy))
+        # print('number of live ants ', LiveDeadAssay(AntList))
+        # print('point list index ', PointList.index(AntList[0].xy))
 
         # begin main actions. 
         while (nLiveAnts > nAnts//4):
         
-            ComputeMoveChoice(w, AntList)    
-            #print('outside scope',sumMatrix(w.Tau))
-
+            ComputeMoveChoice(w, AntList)
             nLiveAnts = LiveDeadAssay(AntList)
-            print('number of living ants ', nLiveAnts)
         
         print(f'--- batch {j} ---')
-        PrintAntTracks(AntList)
+        PrintAntTracks(AntList, nPoints)
         
 if __name__ =='__main__':
+    start_time = time.time()
     # powers of 2
     nPoints = 64
     nAnts = 64
     
     rho = 0.9 # evaportation coeff
-    alpha =0.01 # tuning param on tau (pheremone)
+    alpha = 0.01 # tuning param on tau (pheremone)
     beta  = 0.01 # tuning param on eta (attractiveness)
     Q = 0.1 # pheremone update param
 
@@ -243,5 +257,10 @@ if __name__ =='__main__':
     print('object id for a test \nPointList@:{} \nw.PointList@:{} \nSame?:{}'\
           .format(id(PointList), id(w.PointList), id(PointList)==id(w.PointList)))
     
-    RunBatches(w, nAnts, n_iterations = 5)
+    RunBatches(w, nAnts, nPoints, n_iterations = 5)
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+
+    # Print the elapsed time
+    print(f"The code took {elapsed_time:.4f} seconds to run.")
  

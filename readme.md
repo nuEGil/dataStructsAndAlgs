@@ -13,19 +13,24 @@ procedure ACO_MetaHeuristic is
         pheremoneUpdate() 
 end procedure
 
-
 applied to travelling salesman problem. 
 https://en.wikipedia.org/wiki/Travelling_salesman_problem
-
 kth ant moves from state x to state y with probability 
 p^k_xy = (tau^alpha_xy)(eta^beta) / sum_zallowed((tau^alpha_xz)(eta^beta_xz))
-
 tau = pheremones
 eta = desireability
-
 tau_xy update = (1-rho)tau_xy + sum(change in tau^k_xy)
-
 Q/L_k  if the any uses curve xy in its tour, 0 othterwise... 
+
+Goal: learn a good probability distribution on making moves
+other notes:
+1. p^k_xy is probability of a move conditioned on desireability = 1/distance, and on 
+the number of times a move has been made by the other ants. 
+
+2. 
+
+
+
 
 
 ## douby linked list 
