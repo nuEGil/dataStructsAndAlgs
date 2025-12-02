@@ -48,7 +48,7 @@ Call the kernel with
     
     kernel<<<1,1>>>(); 
 
-<<<gridSize, blockSize>>>
+<<<blockSize, gridSize >>>
 
 
 cudaMalloc -- memory allocation on the gpu 

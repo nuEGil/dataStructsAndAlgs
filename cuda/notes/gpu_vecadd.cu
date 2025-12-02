@@ -36,6 +36,7 @@ int main(void){
     cudaMemcpy(dev_a, a, N*sizeof(int), cudaMemcpyHostToDevice);
     cudaMemcpy(dev_b, b, N*sizeof(int), cudaMemcpyHostToDevice);
 
+    // blocksize N, gridsize 1, getting N copies of the kernel on a 1d grid. . 
     add<<<N,1>>>(dev_a, dev_b, dev_c);
     // now copy back the result from the device to host ie GPU->CPU
     cudaMemcpy(c, dev_c, N * sizeof(int), cudaMemcpyDeviceToHost);
