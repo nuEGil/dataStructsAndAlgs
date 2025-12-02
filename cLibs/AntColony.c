@@ -3,22 +3,56 @@
 #include<string.h>
 #include<ctype.h>
 #include<stdint.h>
+#define MAX_TRACK 512
 
-typedef struct World{
-    int [] positions; // list of positions N
-    int [][] DistanceMatrix; // precomputed distance matrix
-    int [][] VisitationCounts; // use to compute pheremone updates
-} World;
-
-typedef struct Ant{
-    bool live; // use as an ant exit condition
+typedef struct {
+    bool live;
     int x;
     int y;
-    // you can make this a dynamic length array 
-    // and have the ant end if the next posible node is head, or if the array size limit is met
-    int sites []; // dynamic array
+    int* track;        // dynamic array of visited nodes
+    int trackSize;     // how many entries currently used
+    int trackCapacity; // allocated length
 } Ant;
 
+Ant* createAnt(int capacity) {
+    Ant* a = malloc(sizeof(Ant));
+    a->live = false;
+    a->x = 0;
+    a->y = 0;
+
+    a->track = malloc(sizeof(int) * capacity);
+    a->trackSize = 0;
+    a->trackCapacity = capacity;
+
+    return a;
+}
+
+void destroyAnt(Ant* a) {
+    free(a->track);
+    free(a);
+}
+
+
+typedef struct {
+    // Immutable list of points (store as array of coordinates)
+    // Example: x and y as separate arrays or a Point struct
+    int pointCount;
+    int* pointX;
+    int* pointY;
+
+    // Pheromone matrix Tau[i][j]
+    double** Tau;
+
+    // Desirability matrix Eta[i][j]
+    double** Eta;
+
+    // Scalar parameters
+    double Rho;    // evaporation
+    double Alpha;  // pheromone weight
+    double Beta;   // desirability weight
+    double Q;      // pheromone deposit amount
+
+} World;
 
 /*
 GenerateSites()
