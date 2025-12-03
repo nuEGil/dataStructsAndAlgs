@@ -3,6 +3,11 @@ CUDA by Example: an Introductions to general purpose GPU programming - Jason San
 
 but im using nvcc 11, and gcc 11
 
+book makes a lot of reference to header files in common so go get the whole book code from if you want to follow it. 
+https://developer.nvidia.com/cuda-example
+
+
+
 ## Installation
 Visual studio latest version does not have support for cuda -- would have to install an older version. Use VSCode because it does have support.
 
@@ -25,6 +30,15 @@ Need to compile CPU code and compile GPU code. nvcc compiles .cu files. Compile 
 cuda code is c++ code by default, but you can force c mode with 
 
     nvcc -x cu -Xcompiler "-x c" file.cu -o app.exe
+
+In chapter 4 the julia set example needs glut. and the common directory, so 
+get the book header stuff here https://developer.nvidia.com/cuda-example
+
+install glut
+    sudo apt-get install freeglut3-dev libglu1-mesa-dev libgl1-mesa-dev
+
+Then compile with these flags. heehee
+    nvcc juliaset.cu -o juliashome.exe -lglut -lGLU -lGL
 
 CMake instructions with that cmake list text -- assumes you have 
 cuda_project/
